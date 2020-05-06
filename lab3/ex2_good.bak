@@ -1,0 +1,132 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+
+int main(int argc, char **argv) //Process A
+{
+    pid_t b,c,d,e,f,g,i;
+    printf("A\n");
+    /*Create process B*/
+    b = fork();
+    if (b == -1) //Fail to fork
+        exit(1);
+    else if (b == 0)  //Process B
+    {
+        printf("B\n");
+        /*Stop process B here to wait for process A create process C,D */
+        kill(getpid(), SIGSTOP);
+
+        /*B will continue from below*/
+        /*Create process E*/
+        e = fork();
+        if (e == -1) // Fail to fork
+            exit(1);
+        if (e == 0) //Process E
+        {
+            printf("E\n");
+            kill(getpid(),SIGSTOP);
+        }
+        else  //Continue process B
+        {
+            /*Wait for process E complete*/
+            waitpid(e, NULL, WUNTRACED);
+
+            /*Create process F*/
+            f = fork();
+            if (f == -1) //Fail to fork
+                exit(1);
+            if (f == 0) //Process F
+            {
+                printf("F\n");
+                kill(getpid(),SIGSTOP);
+            }
+            else    //Continue process B
+            {
+                /*Wait for process F complete*/
+                waitpid(f, NULL, WUNTRACED);
+                kill(getpid(), SIGSTOP);
+            }
+        }
+    }
+    else   //Continue process A
+    {
+        waitpid(b, NULL, WUNTRACED);
+
+        /*Create process C*/
+        c = fork();
+        if (c == -1) //Fail to fork
+            exit(1);
+        if (c == 0) //Process C
+        {
+            printf("C\n");
+            /*Stop process C here to wait for process A to create process D*/
+            kill(getpid(), SIGSTOP);
+
+            /*C will continue from below*/
+            g = fork();
+            if (g < 0)
+                exit(1);
+            if (g == 0)    //Process G
+            {
+                printf("G\n");
+
+                /*Create process I*/
+                i = fork();
+                if (i < 0)  //Fail to fork
+                    exit(1);
+                if (i == 0)  //Process I
+                {
+                    printf("I\n");
+                    kill(getpid(), SIGSTOP);
+                }
+                else //continue process G
+                {
+                    /*Wait for process I complete*/
+                    waitpid(i, NULL, WUNTRACED);
+                    kill(getpid(), SIGSTOP);
+                }
+            }
+            else      //Continue process C   
+            {                               
+                /*Wait for process G complete*/
+                waitpid(g, NULL, WUNTRACED);
+                kill(getpid(), SIGSTOP);
+            }                               
+        }
+        else  //Continue process A
+        {
+            /*Wait for process C to stop */
+            waitpid(c, NULL, WUNTRACED);
+
+            /*Create process D*/
+            d = fork();
+            if (d == 0)
+            {
+                printf("D\n");
+                kill(getpid(), SIGSTOP);
+            }
+            else
+            {
+                /*Wait for process D complete*/
+                waitpid(d, NULL, WUNTRACED);
+
+                /*Send signal to continue process B to create process E, F*/
+                kill(b , SIGCONT);
+                waitpid(b, NULL, WUNTRACED);
+                
+                /*Send signal to continue process C to create process G, i*/
+                kill(c, SIGCONT);
+                waitpid(c, NULL, WUNTRACED);
+
+                while(1)               
+                {                      
+                    printf("finish\n");
+                    sleep(1);          
+                }                      
+            }
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,122 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+
+int main(int argc, char **argv) //Process A
+{
+    printf("A\n");
+    /*Create process B*/
+    pid_t child_pid = fork();
+    if (child_pid == -1)
+        exit(1);
+    if (child_pid == 0)  //Process B
+    {
+        printf("B\n");
+        /*Create process E*/
+        child_pid = fork();
+        if (child_pid == -1)
+            exit(1);
+        if (child_pid == 0) //Process E
+        {
+            printf("E\n");
+            exit(1);
+            /*kill(getpid(),SIGSTOP);*/
+            pause();
+            /*while(1);*/
+        }
+        else  //Continue process B
+        {
+            /*wait(NULL);*/
+            waitpid(child_pid, NULL, 0);
+
+            /*Create process F*/
+            child_pid = fork();
+            if (child_pid == -1)
+                exit(1);
+            if (child_pid == 0) //Process F
+            {
+                printf("F\n");
+                /*kill(getpid(),SIGSTOP);*/
+                pause();
+            }
+            /*if(fork() == 0)             */
+            /*{                           */
+            /*    printf("F\n");          */
+            /*    kill(getpid(), SIGSTOP);*/
+            /*}                           */
+            else
+            {
+                /*wait(NULL);*/
+                waitpid(child_pid, NULL, 0);
+                /*kill(getpid(), SIGSTOP);*/
+                pause();
+            }
+        }
+    }
+    else   //Continue process A
+    {
+        waitpid(child_pid, NULL, 0);
+        /*wait(NULL);*/
+        /*Create process C*/
+        child_pid = fork();
+        if (child_pid == -1)
+            exit(1);
+        if (child_pid == 0) //Process C
+        {
+            printf("C\n");
+            child_pid = fork();
+            if (child_pid == 0)    //Process G
+            {
+                printf("G\n");
+                child_pid = fork();
+                if(child_pid==0)         //Process I
+                {
+                    printf("I\n");
+                    /*kill(getpid(), SIGSTOP);*/
+                    pause();
+                }
+                else //continue process G
+                {
+                    /*sleep(1);*/
+                    /*wait(NULL);*/
+                    waitpid(child_pid, NULL, 0);
+                    /*kill(getpid(), SIGSTOP);*/
+                    pause();
+                }
+            }
+            else if(child_pid > 0)      //continue process C   
+            {                               
+                /*wait(NULL);                 */
+                waitpid(child_pid, NULL, 0);
+                /*kill(getpid(), SIGSTOP);*/
+                pause();                
+            }                               
+        }
+        else  //Continue process A
+        {
+            /*wait(NULL);*/
+            waitpid(child_pid, NULL, 0);
+
+            /*Create process D*/
+            if (fork() == 0)
+            {
+                printf("D\n");
+                /*kill(getpid(), SIGSTOP);*/
+                /*pause();*/
+            }
+            else
+            {
+                /*sleep(1);*/
+                wait(NULL);
+                while(1)               
+                {                      
+                    printf("finish\n");
+                    sleep(1);          
+                }                      
+            }
+        }
+    }
+    return 0;
+}

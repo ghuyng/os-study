@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ex1.h"
+#include "my_malloc.h"
 
 void *aligned_malloc(unsigned int size, unsigned int align)       
 {                                                                 
@@ -14,7 +15,7 @@ void *aligned_malloc(unsigned int size, unsigned int align)
     }
         
     size_t total_size = (size_t)(size + align - 1 + sizeof(void*));
-    void *p1 = malloc(total_size);
+    void *p1 = my_malloc(total_size);
     if (!p1)                                                       
         return NULL;                                               
 
@@ -24,9 +25,9 @@ void *aligned_malloc(unsigned int size, unsigned int align)
     return p2;                                                     
 }
 
-void aligned_free(void *ptr)
+void *aligned_free(void *ptr)
 {
     void *real_ptr = *((void**)((size_t)ptr - sizeof(void*))); 
-    free(real_ptr);
-    return;
+    my_free(real_ptr);
+    return ptr;
 }

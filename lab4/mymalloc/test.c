@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "my_malloc.h"
+#include "ex1.h"
 
 int main()
 {
@@ -12,7 +13,7 @@ int main()
     printf("program break before calling aligned_malloc : %p\n", sbrk(0));
     printf("%p\n", sbrk(0));
     printf("%p\n", sbrk(0));
-    int *p = (int*)my_malloc(sizeof(int) * 4);
+    int *p = (int*)aligned_malloc(sizeof(int) * 4, 8);
     /*int *p = (int*)malloc(sizeof(int) * 4);*/
     printf("%p\n", sbrk(0));
     /*printf("Address str = %p\n",str); */
@@ -29,7 +30,7 @@ int main()
     printf("%ld\n", ((size_t)sbrk(0) - (size_t)p));
     /*my_free(str); */
     /*my_free(str2);*/
-    my_free(p);
+    aligned_free(p);
     /*free(p);*/
     /*printf("Address str = %p\n",str); */
     /*printf("Address str = %p\n",str2);*/

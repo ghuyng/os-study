@@ -5,7 +5,7 @@
 
 void *aligned_malloc(unsigned int size, unsigned int align)       
 {                                                                 
-    if (size == 0)                                                
+    if (size == 0 || align == 0)                                                
         return NULL;                                              
 
     /*Check if align is power of 2 */
@@ -34,8 +34,11 @@ void *aligned_malloc(unsigned int size, unsigned int align)
 
 void *aligned_free(void *ptr)
 {
+    if (!ptr)
+        return NULL;
     /*Get the pointer of the block memory*/
     void *block_ptr= *((void**)((size_t)ptr - sizeof(void*))); 
     my_free(block_ptr);
     return ptr;
 }
+

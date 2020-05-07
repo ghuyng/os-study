@@ -148,6 +148,8 @@ void *my_malloc(size_t size)
 
 void my_free(void *ptr)
 {
+    if (!ptr)
+        return;
     /*Get the pointer to the begin of the block*/
     void *block_ptr = (void*)((size_t)ptr - sizeof(block_t));
     add_to_freelist(block_ptr);

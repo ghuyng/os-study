@@ -14,8 +14,8 @@ typedef struct block{
 static block_t *head = NULL;
 
 
-/*This function used to split the block pointed by *ptr                                 */
-/*into 2 blocks with 1 block = size and return pointer to the new block                 */
+/*This function used to split the block pointed by *ptr                                   */
+/*into 2 blocks with 1 block = size and return pointer to the split point                 */
 block_t *split(block_t * ptr, size_t size)
 {
     block_t *newptr = (block_t *)((size_t)ptr + size + sizeof(block_t));
@@ -24,9 +24,9 @@ block_t *split(block_t * ptr, size_t size)
     return newptr;
 }
 
+/*This function adds memory block to free_list */
 void add_to_freelist(block_t *block)
 {
-    /*Add block to free_list       */
     /*This list is order by address*/
     block->prev = NULL;
     block->next = NULL;
@@ -41,15 +41,18 @@ void add_to_freelist(block_t *block)
     }
     else
     {
+        /*Find the position to store the block in the free_list*/
         block_t *ptr = head;
         while(ptr->next && (size_t)ptr < (size_t)block)
             ptr = ptr->next;
+
         block->next = ptr->next;
         block->prev = ptr;
         ptr->next = block;
     }
 }
 
+/*This function removes the memory block from the free_list*/
 void remove_from_freelist(block_t *block)
 {
     if (block->prev == NULL) //block is head
@@ -60,10 +63,11 @@ void remove_from_freelist(block_t *block)
         block->next->prev = block->prev;
 }
 
-/*This function is used to merge the continuous free blocks in the list*/
-/*and return the free block that ends at the heap_brk                  */
+/*This function is used to merge the continuous free blocks in the list  */
+/*and the free block that ends at the heap_brk will be returned to the OS*/
 void optimize_freelist()
 {
+    /*Get the endpoint of the Heap*/
     size_t heap_brk = (size_t)sbrk(0);
     block_t *curr = head;
 
@@ -111,12 +115,17 @@ void *my_malloc(size_t size)
 
     /*Loop through the free-list to find free_block that large enough*/
     /*This is First-Fit algorithm                                    */
-    while(ptr){
-        if(ptr->size >= size){
+    while(ptr)
+    {
+        if(ptr->size >= size)// Found the large enough block
+        { 
+            remove_from_freelist(ptr);
             block_mem = (void*)((size_t)ptr + sizeof(block_t));
-            if (ptr->size == size)
+            if (ptr->size == size) //Found the perfect fit block
                 return block_mem;
 
+            /*If the block is bigger than needed size,         */
+            /* split it and store the remain block to free_list*/
             newptr = split(ptr, size);
             add_to_freelist(newptr);
             return block_mem;
@@ -139,6 +148,7 @@ void *my_malloc(size_t size)
 
 void my_free(void *ptr)
 {
+    /*Get the pointer to the begin of the block*/
     void *block_ptr = (void*)((size_t)ptr - sizeof(block_t));
     add_to_freelist(block_ptr);
     optimize_freelist();

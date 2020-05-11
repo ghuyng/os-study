@@ -23,6 +23,7 @@ unsigned long monte_carlo(unsigned long nPoints)
 
 int main(int argc, char *argv[])
 {
+    timer_t start = time(NULL);
     if(argc != 2) {
         fprintf( stderr , "usage : a.out <integer value>\n" ) ;
         return -1;
@@ -38,5 +39,6 @@ int main(int argc, char *argv[])
     double pi = 4 * (double)nInCircle/nPoints;
     printf("pi = %f\n", pi);
     
+    printf("total time = %f", difftime(time(NULL), start));
     return 0;
 }

@@ -4,7 +4,7 @@ pi_serial: pi_serial.o
 	gcc -o pi_serial pi_serial.o
 
 pi_multi-thread: pi_multi-thread.o
-	gcc -o pi_multi-thread pi_multi-thread.o
+	gcc -pthread -o pi_multi-thread pi_multi-thread.o
 
 pi_serial.o: pi_serial.c
 	gcc -c pi_serial.c

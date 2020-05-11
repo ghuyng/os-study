@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+#define NUM_THREADS 2
+
+unsigned int count_in_circle = 0;
+pthread_mutex_t mutex;
+
+struct thread_data{
+    int tid;
+    unsigned long nPoints;
+} thread_data_arr[NUM_THREADS-1];
+
+/*This function does a Monter-Carlo simulation by randomly picking (nPoints) points*/
+/*inside the square and count the number of points land inside the circle          */
+void monte_carlo(void *thread_arg)
+{
+    struct thread_data *data = (struct thread_data*)thread_arg;
+    unsigned long total = (unsigned long)data->nPoints;
+    int *seedp = &(data->tid);
+    double x, y;
+    for(int i=0; i<total; i++)
+    {
+        /*Randomize x and y in range [-1, 1]*/
+        x = (double)rand_r(seedp)/RAND_MAX * 2 - 1;
+        y = (double)rand_r(seedp)/RAND_MAX * 2 - 1;
+        if (x*x + y*y <= 1)
+        {
+            pthread_mutex_lock(&mutex);
+            count_in_circle ++;
+            pthread_mutex_unlock(&mutex);
+        }
+    }
+
+    pthread_exit(NULL);
+}
+
+int main(int argc, char *argv[])
+{
+    time_t start = time(NULL);
+    if(argc != 2) {
+        fprintf( stderr , "usage : a.out <integer value>\n" ) ;
+        return -1;
+    }
+
+    if(atol(argv[1]) < 0) {
+        fprintf(stderr , "%d must be >= 0\n" , atoi(argv[1])) ;
+        return -1;
+    }
+
+    pthread_t       threads[NUM_THREADS-1];
+    pthread_attr_t  attr[NUM_THREADS-1];
+    unsigned long nPoints = atol(argv[1]);
+    unsigned long n = nPoints/NUM_THREADS;
+
+    srand(time(NULL));
+    for(int i=0; i<NUM_THREADS-1; i++)
+    {
+        /*pthread_attr_init(&attr[i]);*/
+        /*pthread_create(&threads[i], &attr[i], monte_carlo, (void*)(nPoints/NUM_THREADS));*/
+        thread_data_arr[i].tid = threads[i];
+        thread_data_arr[i].nPoints = n;
+        /*pthread_create(&threads[i], NULL, monte_carlo, (void*)(nPoints/NUM_THREADS));*/
+        pthread_create(&threads[i], NULL, monte_carlo, (void*)(&thread_data_arr[i]));
+    }
+
+    /*Run simulation for main function*/
+    double x, y;
+    for(int i=0; i<n; i++)
+    {
+        /*Randomize x and y in range [-1, 1]*/
+        x = (double)rand()/RAND_MAX * 2 - 1;
+        y = (double)rand()/RAND_MAX * 2 - 1;
+        if (x*x + y*y <= 1)
+        {
+            pthread_mutex_lock(&mutex);
+            count_in_circle ++;
+            pthread_mutex_unlock(&mutex);
+        }
+    }
+
+    for(int i=0; i<NUM_THREADS-1; i++)
+        pthread_join(threads[i],NULL);
+
+    double pi = 4 * (double)count_in_circle/nPoints;
+    printf("pi = %f\n", pi);
+    
+    printf("total time = %f", difftime(time(NULL),start));
+    return 0;
+}

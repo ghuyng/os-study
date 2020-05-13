@@ -12,7 +12,7 @@ struct thread_data{
 
 /*This function does a Monter-Carlo simulation by randomly picking (nPoints) points*/
 /*inside the square and count the number of points land inside the circle          */
-void monte_carlo(void *thread_arg)
+void *monte_carlo(void *thread_arg)
 {
     struct thread_data *data = (struct thread_data*)thread_arg;
     unsigned long total = data->nPoints;
@@ -32,7 +32,7 @@ void monte_carlo(void *thread_arg)
 
 int main(int argc, char *argv[])
 {
-    time_t start = time(NULL);
+    /*time_t start = time(NULL);*/
     if(argc != 2) {
         fprintf( stderr , "usage : a.out <integer value>\n" ) ;
         return -1;
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     double pi = 4 * (double)count_in_circle/total;
     printf("pi = %f\n", pi);
     
-    printf("total time = %f", difftime(time(NULL),start));
+    /*printf("total time = %f", difftime(time(NULL),start));*/
 
     pthread_exit(NULL);
 }

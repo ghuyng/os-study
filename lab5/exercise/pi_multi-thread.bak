@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <time.h>
-#define NUM_THREADS 20
+#define NUM_THREADS 5
+
+unsigned int count_in_circle = 0;
+pthread_mutex_t mutex;
 
 struct thread_data{
     int tid;
     unsigned long nPoints;
-    unsigned long return_value;
 } thread_data_arr[NUM_THREADS];
 
 /*This function does a Monter-Carlo simulation by randomly picking (nPoints) points*/
@@ -15,7 +17,7 @@ struct thread_data{
 void monte_carlo(void *thread_arg)
 {
     struct thread_data *data = (struct thread_data*)thread_arg;
-    unsigned long total = data->nPoints;
+    unsigned long total = (unsigned long)data->nPoints;
     int *seedp = &(data->tid);
     double x, y;
     for(int i=0; i<total; i++)
@@ -24,7 +26,11 @@ void monte_carlo(void *thread_arg)
         x = (double)rand_r(seedp)/RAND_MAX * 2 - 1;
         y = (double)rand_r(seedp)/RAND_MAX * 2 - 1;
         if (x*x + y*y <= 1)
-            data->return_value++;
+        {
+            pthread_mutex_lock(&mutex);
+            count_in_circle ++;
+            pthread_mutex_unlock(&mutex);
+        }
     }
 
     pthread_exit(NULL);
@@ -32,7 +38,6 @@ void monte_carlo(void *thread_arg)
 
 int main(int argc, char *argv[])
 {
-    time_t start = time(NULL);
     if(argc != 2) {
         fprintf( stderr , "usage : a.out <integer value>\n" ) ;
         return -1;
@@ -45,31 +50,24 @@ int main(int argc, char *argv[])
 
     pthread_t       threads[NUM_THREADS];
     pthread_attr_t  attr[NUM_THREADS];
-    unsigned long total = atol(argv[1]);
-    unsigned long nPoints = total/NUM_THREADS;  //number of points that each threads will do
-    unsigned long count_in_circle = 0;
+    unsigned long nPoints = atol(argv[1]);
 
     srand(time(NULL));
     for(int i=0; i<NUM_THREADS; i++)
     {
-        pthread_attr_init(&attr[i]);
+        /*pthread_attr_init(&attr[i]);*/
+        /*pthread_create(&threads[i], &attr[i], monte_carlo, (void*)(nPoints/NUM_THREADS));*/
         thread_data_arr[i].tid = threads[i];
-        thread_data_arr[i].nPoints = nPoints;
-        thread_data_arr[i].return_value = 0;
-        pthread_create(&threads[i], &attr[i], monte_carlo, (void*)(&thread_data_arr[i]));
+        thread_data_arr[i].nPoints = nPoints/NUM_THREADS;
+        /*pthread_create(&threads[i], NULL, monte_carlo, (void*)(nPoints/NUM_THREADS));*/
+        pthread_create(&threads[i], NULL, monte_carlo, (void*)(&thread_data_arr[i]));
     }
-
 
     for(int i=0; i<NUM_THREADS; i++)
-    {
         pthread_join(threads[i],NULL);
-        count_in_circle += thread_data_arr[i].return_value;
-    }
 
-    double pi = 4 * (double)count_in_circle/total;
+    double pi = 4 * (double)count_in_circle/nPoints;
     printf("pi = %f\n", pi);
     
-    printf("total time = %f", difftime(time(NULL),start));
-
-    pthread_exit(NULL);
+    return 0;
 }

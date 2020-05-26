@@ -53,10 +53,25 @@ int main(int argc, char *argv[])
     for(int i=0; i<NUM_THREADS; i++)
     {
         pthread_attr_init(&attr[i]);
-        thread_data_arr[i].tid = threads[i];
+        thread_data_arr[i].tid = (int)threads[i];
         thread_data_arr[i].nPoints = nPoints;
         thread_data_arr[i].return_value = 0;
         pthread_create(&threads[i], &attr[i], monte_carlo, (void*)(&thread_data_arr[i]));
+    }
+
+    /*if total is not divisible by NUM_THREADS then the main thread will do the remaining points*/
+    if (total % NUM_THREADS != 0)
+    {
+        double x, y;
+        int remain = total % NUM_THREADS;
+        for(int i=0; i<remain; i++)
+        {
+            /*Randomize x and y in range [-1, 1]*/
+            x = (double)rand()/RAND_MAX * 2 - 1;
+            y = (double)rand()/RAND_MAX * 2 - 1;
+            if (x*x + y*y <= 1)
+                count_in_circle++;
+        }
     }
 
 

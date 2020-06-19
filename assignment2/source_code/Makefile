@@ -3,6 +3,7 @@ INC = -Iinclude
 LIB = -lpthread
 
 SRC = src
+#SRC = src_reference
 OBJ = obj
 INCLUDE = include
 
